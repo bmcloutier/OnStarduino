@@ -52,7 +52,6 @@ char apiServer[] = "na-mobile-api.gm.com";
 int port = 443;
 int refreshTokenLength = 0;
 int subjectTokenLength = 0;
-int refreshTokenTimestampAddress = 0;
 int refreshTokenAddress = 10;
 char refreshToken[1660] = SECRET_REFRESH_TOKEN;
 char subjectToken[1725] = {0};
@@ -60,7 +59,6 @@ char accessToken[1600] = {0};
 long refreshTokenTimestamp = 0;
 long subjectTokenTimestamp = 0;
 long accessTokenTimestamp = 0;
-long currentTimestamp = 0;
 int collectIndex = 0;
 char collect = false;
 char timeCollection[59];
@@ -81,7 +79,6 @@ unsigned long sendStamp = 0;
 // KEYPAD VARIABLES
 int keypadValue = 0;
 unsigned long keyStamp = 0;
-unsigned long commandStamp = 0;
 int key1count = 0;
 int key2count = 0;
 int key3count = 0;
@@ -89,7 +86,6 @@ int key4count = 0;
 int key5count = 0;
 int key6count = 0;
 int keySampleCooldown = 5;
-int keyPressCooldown = 750;
 int queuedCommand = 0;
 
 //
@@ -694,7 +690,7 @@ void sendRequest() {
         client.println("POST /gmb2cprod.onmicrosoft.com/b2c_1a_seamless_mobile_signuporsignin/oauth2/v2.0/token HTTP/1.1");
         client.println("Accept: application/json");
         client.print("Client-Request-Id: ");
-        client.println(SECRET_CLIENT_REQUEST_ID);
+        client.println(clientRequestID);
         client.print("Content-Length: ");
         client.println(refreshTokenLength + 279);
         client.println("Content-Type: application/x-www-form-urlencoded");
@@ -703,7 +699,7 @@ void sendRequest() {
         client.println("User-Agent: myChevrolet/118 CFNetwork/1408.0.4 Darwin/22.5.0");
         client.println();
         client.print("client_id=");
-        client.print(SECRET_CLIENT_ID);
+        client.print(clientID);
         client.print("&scope=https%3A%2F%2Fgmb2cprod.onmicrosoft.com%2F3ff30506-d242-4bed-835b-422bf992622e%2FTest.Read+openid+profile+offline_access&refresh_token=");
         client.print(refreshToken);
         client.println("&redirect_uri=msauth.com.gm.myChevrolet%3A%2F%2Fauth&client_info=1&grant_type=refresh_token");
