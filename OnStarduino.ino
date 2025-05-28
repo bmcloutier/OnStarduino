@@ -29,8 +29,6 @@ const int statusLEDPin = 24;    // A7 PWM OUTPUT
 char mobileSSID[] = SECRET_MOBILE_SSID;
 char wifiSSID[] = SECRET_WIFI_SSID;
 char wifiPass[] = SECRET_WIFI_PASS;
-char mattSSID[] = SECRET_MATT_SSID;
-char mattPass[] = SECRET_MATT_PASS;
 char smsUser[] = SECRET_SMS_USER;
 char smsPass[] = SECRET_SMS_PASS;
 char smsDID[] = SECRET_SMS_DID;
@@ -224,13 +222,6 @@ void setup() {
     playZelda();
   } else if (keypadValue > 980 && keypadValue < 1000) {
     WiFi.begin(mobileSSID, wifiPass);
-    playZelda();
-  } else if (keypadValue > 770 && keypadValue < 790) {
-    WiFi.begin(mattSSID, mattPass);
-    playZelda();
-  } else if (keypadValue > 640 && keypadValue < 660) {
-    demoMode = true;
-    WiFi.begin(mattSSID, mattPass);
     playZelda();
   } else {
     WiFi.begin(wifiSSID, wifiPass);
