@@ -292,7 +292,6 @@ void loop() {
 void handleErrors() {
   if (failState > 0) {
     if (WiFi.isConnected()) {
-      Serial.println("Sending SMS with error message");
       client.connect(smsServer, port);
       client.print("GET /api/v1/rest.php?api_username=");
       client.print(smsUser);
@@ -302,29 +301,23 @@ void handleErrors() {
       client.print(smsDID);
       client.print("&dst=");
       client.print(smsDST);
-      client.print("&message=ERROR: ");
+      client.print("&message=Error: ");
     }
     Serial.print("ERROR: ");
     switch (failState) {
       case 1: {
-        client.print("Initial connection failed for request ");
-        client.print(queuedRequest);
-        Serial.print("Initial connection failed for request ");
-        Serial.println(queuedRequest);
+        client.print("Initial connection failed");
+        Serial.println("Initial connection failed");
         break;
       }
       case 2: {
-        client.print("Response took too long to arrive for case ");
-        client.print(queuedFetch);
-        Serial.print("Response took too long to arrive for case ");
-        Serial.println(queuedFetch);
+        client.print("Response took too long to arrive");
+        Serial.println("Response took too long to arrive");
         break;
       }
       case 3: {
-        client.print("inProgress status not received for command ");
-        client.print(queuedFetch);
-        Serial.print("inProgress status not received for command ");
-        Serial.println(queuedFetch);
+        client.print("Command ID not received");
+        Serial.println("Command ID not received");
         Serial.println(commandCollection);
         break;
       }
@@ -380,6 +373,7 @@ void handleErrors() {
     client.println(" HTTP/1.1");
     client.println("Host: voip.ms");
     client.println();
+    delay(2000);
     client.flush();
     client.stop();
   }
@@ -783,6 +777,7 @@ void fetchResponse() {
         } else {
           digitalWrite(tapeMotorPin, LOW);
           failState = 3;
+          queuedCommand = 0;
         }
         break;
       }
@@ -800,9 +795,7 @@ void fetchResponse() {
         }
         responseCollection[collectIndex] = '\0';
         client.flush();
-        if (strstr(responseCollection, "inProgress")) {
-          Serial.println("Command inProgress");
-        } else if (strstr(responseCollection, "success")) {
+        if (strstr(responseCollection, "success")) {
           queuedCommand = 0;
           digitalWrite(tapeMotorPin, LOW);
           if (strstr(responseCollection, "diagnostics")) {
@@ -810,9 +803,10 @@ void fetchResponse() {
             isResetRequired = true;
             updateDiagnostics();
           }
-        } else {
+        } else if (strstr(responseCollection, "inProgress") == NULL) {
           digitalWrite(tapeMotorPin, LOW);
           failState = 4;
+          queuedCommand = 0;
         }
         break;
       }
