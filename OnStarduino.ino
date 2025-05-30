@@ -34,9 +34,9 @@ char smsPass[] = SECRET_SMS_PASS;
 char smsDID[] = SECRET_SMS_DID;
 char smsDST[] = SECRET_SMS_DST;
 char vin[] = SECRET_VIN;
+char deviceID[] = SECRET_DEVICE_ID;
 char clientRequestID[] = SECRET_CLIENT_REQUEST_ID;
 char clientID[] = SECRET_CLIENT_ID;
-char deviceID[] = SECRET_DEVICE_ID;
 
 //
 // GENERAL VARIABLES
