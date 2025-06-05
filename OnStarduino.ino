@@ -140,12 +140,6 @@ int counterPosition = 0;
 int hoursPassed = 0;
 
 //
-// DEMO VARIABLES
-bool demoMode = false;
-unsigned long demoKeyStamp = 0;
-bool demoSpinTape = false;
-
-//
 // SETUP
 void setup() {
   Serial.begin(115200);
@@ -207,22 +201,7 @@ void setup() {
   pinMode(voltagePin, OUTPUT);
 
   // WIFI SETUP
-  keypadValue = (analogRead(keypadPin));
-  if (keypadValue > 2010 && keypadValue < 2040) {
-    demoMode = true;
-    WiFi.begin(wifiSSID, wifiPass);
-    playZelda();
-  } else if (keypadValue > 1320 && keypadValue < 1340) {
-    demoMode = true;
-    WiFi.begin(mobileSSID, wifiPass);
-    playZelda();
-  } else if (keypadValue > 980 && keypadValue < 1000) {
-    WiFi.begin(mobileSSID, wifiPass);
-    playZelda();
-  } else {
-    WiFi.begin(wifiSSID, wifiPass);
-  }
-  keypadValue = 0;
+  WiFi.begin(wifiSSID, wifiPass);
   isTransmitting = true;
   while (WiFi.status() != WL_CONNECTED) {
     currentMillis = millis();
@@ -426,67 +405,7 @@ void sampleKeypad() {
 }
 
 void queueKeypadCommand() {
-  if (demoMode && currentMillis - demoKeyStamp >= 1000) {
-    demoKeyStamp = currentMillis;
-    if (key1count > 2) {
-      if (stepperTarget != stepsTo100 * 0.3) {
-        stepperTarget = stepsTo100 * 0.3;
-      }
-      setTime(0, 0, 0, 1, 1, 2000);
-      hourStamp = -60000;
-      evPlugVoltage = 0;
-      setVoltage = true;
-      resetKeyCount();
-    } else if (key2count > 2) {
-      if (evPlugVoltage == 0) {
-        isResetRequired = true;
-        evPlugVoltage = 240;
-        setVoltage = true;
-      }
-      if (stepperTarget < stepsTo100 * 0.8) {
-        stepperTarget += stepsTo100 * 0.1;
-      }
-      resetKeyCount();
-    } else if (key3count > 2) {
-      if (!demoSpinTape) {
-        demoSpinTape = true;
-        digitalWrite(tapeMotorPin, HIGH);
-        for (int i = 0; i < 2; i++) {
-          while (statusLEDBrightness < 180) {
-            statusLEDBrightness += statusLEDIncrement;
-            analogWrite(statusLEDPin, statusLEDBrightness);
-            delay(2);
-          }
-          statusLEDBrightness = 0;
-        }
-        analogWrite(statusLEDPin, 0);
-      } else {
-        demoSpinTape = false;
-        for (int i = 0; i < 4; i++) {
-          while (statusLEDBrightness < 180) {
-            statusLEDBrightness += statusLEDIncrement;
-            analogWrite(statusLEDPin, statusLEDBrightness);
-            delay(2);
-          }
-          statusLEDBrightness = 0;
-        }
-        digitalWrite(tapeMotorPin, LOW);
-        analogWrite(statusLEDPin, 0);
-        statusLEDBrightness = 0;
-      }
-      resetKeyCount();
-    } else if (key4count > 2) {
-      if (digitalRead(smsPin) == HIGH) {
-        client.connect(smsServer, port);
-        queuedRequest = 10;
-      }
-      resetKeyCount();
-    } else if (key5count > 2) {
-      resetKeyCount();
-    } else if (key6count > 2) {
-      resetKeyCount();
-    }
-  } else if (!demoMode && queuedCommand == 0) {
+  if (queuedCommand == 0) {
     if (key1count > 2) {
       queuedCommand = 1;
       resetKeyCount();
@@ -971,10 +890,10 @@ void setStatusLED() {
     if (currentMillis - statusLEDStamp > 1) {
       statusLEDStamp = currentMillis;
       statusLEDBrightness += statusLEDIncrement;
-      analogWrite(statusLEDPin, statusLEDBrightness);
-      if (statusLEDBrightness >= 180) {
+      if (statusLEDBrightness > 180) {
         statusLEDBrightness = 0;
       }
+      analogWrite(statusLEDPin, statusLEDBrightness);
     }
   } else if (!isTransmitting && statusLEDBrightness > 0) {
     statusLEDBrightness = 0;

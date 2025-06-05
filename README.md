@@ -2,16 +2,16 @@
 
 #### Designed to appear as a retro-styled radio, this Arduino-powered dashboard displays data about my Chevy Bolt EV and lets me remotely start the car, unlock doors, and more!
 
-![Retro-styled portable cassette player](/images/OnStarduino.jpg "OnStarduino")
+![Retro-styled portable cassette player](/images/OnStarduinoDemo.gif "OnStarduino")
 
 - The glowing tuner needle shows the battery level, and pulses if the car is charging.
-- The VU meter displays the current charging voltage of 120, 240, or 400 volts.
-- The counter resets when data is refreshed and increments each hour thereafter.
-- The buttons for play/rewind/etc send commands to remote start the car, unlock doors, flash lights, etc.
-- The tape spins when a command is in progress, and the activity LED will blink SOS if the command fails.
-- The toggle button enables an SMS reminder if the car isn't plugged in at 9PM.
-- The slider controls the speaker volume, the knob adjusts LED brightness.
-- The antenna is for aesthetics only!
+- VU meter displays the current charging voltage of 120, 240, or 400 volts.
+- Counter resets when data is refreshed and increments each hour thereafter.
+- Buttons for play/rewind/etc send commands to remote start the car, unlock doors, flash lights, etc.
+- Tape spins when a command is in progress, and the activity LED will blink SOS if the command fails.
+- Toggle button enables an SMS reminder if the car isn't plugged in at 9PM.
+- Slider controls the speaker volume, the knob adjusts LED brightness.
+- Antenna is for aesthetics only!
 
 <br>
 
