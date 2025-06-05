@@ -24,6 +24,8 @@
 
 Special thanks to samrum for their work on the [OnStarJS](https://github.com/samrum/OnStarJS) library. It was instrumental in helping me understand the mechanics of the OnStar API.
 
+[Icon artwork by Noah Jacobus](https://www.svgrepo.com/collection/chunk-16px-thick-interface-icons/)
+
 <br>
 
 ## Minimum Install Requirements
