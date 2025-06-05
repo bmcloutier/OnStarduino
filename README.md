@@ -107,7 +107,7 @@ if ((hoursPassed % 4 != 0 && counterPosition == 8) || counterPosition == 9) {
 
 ### Playback Controls/Command Keypad
 
-The command keypad mimics the appearance of tape playback buttons, and uses mechanical keyboard switches for a nice look and feel. I wanted six buttons but didn't want to consume six GPIO pins, so I used a technique [posted by IoT_hobbyest](https://forum.arduino.cc/t/analog-keypad-or-multiple-buttons-on-a-single-arduino-pins-code-example/931236) that allows a single pin to read multiple button inputs.![Render of keypad](/images/KeypadRender.png)
+The command keypad mimics the appearance of tape playback buttons, and uses mechanical keyboard switches for a nice look and feel. I wanted six buttons but didn't want to consume six GPIO pins, so I used a technique [posted by IoT_hobbyist](https://forum.arduino.cc/t/analog-keypad-or-multiple-buttons-on-a-single-arduino-pins-code-example/931236) that allows a single pin to read multiple button inputs.![Render of keypad](/images/KeypadRender.png)
 
 The challenge with using the single-pin technique is that it relies on analog readings of the keypad, which is often noisy. For example, pressing a key might typically output a value of about 990. But sometimes that same key might output a value of 650. To mitigate this I sample the keypad every 5 milliseconds, counting how many times the value falls within a range. Only when a count exceeds a threshold will an event trigger. That way, one or two erroneous readings won't accidentally start my car!
 
