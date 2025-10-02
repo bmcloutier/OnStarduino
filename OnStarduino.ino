@@ -34,6 +34,7 @@ char smsPass[] = SECRET_SMS_PASS;
 char smsDID[] = SECRET_SMS_DID;
 char smsDST[] = SECRET_SMS_DST;
 char vin[] = SECRET_VIN;
+char vid[] = SECRET_VID;
 char deviceID[] = SECRET_DEVICE_ID;
 char clientRequestID[] = SECRET_CLIENT_REQUEST_ID;
 char clientID[] = SECRET_CLIENT_ID;
@@ -49,21 +50,26 @@ WiFiClientSecure client;
 char smsServer[] = "voip.ms";
 char refreshServer[] = "custlogin.gm.com";
 char apiServer[] = "na-mobile-api.gm.com";
+char queryServer[] = "eve-vcn.ext.gm.com";
 int port = 443;
 int refreshTokenLength = 0;
 int subjectTokenLength = 0;
+int accessTokenLength = 0;
 int refreshTokenAddress = 10;
 char refreshToken[1660] = SECRET_REFRESH_TOKEN;
 char subjectToken[1725] = {0};
 char accessToken[1600] = {0};
+char gmToken[400] = {0};
 long refreshTokenTimestamp = 0;
 long subjectTokenTimestamp = 0;
 long accessTokenTimestamp = 0;
+long gmTokenTimestamp = 0;
 int collectIndex = 0;
 char collect = false;
 char timeCollection[59];
 char subjectCollection[6000] = {0};
 char accessCollection[2000] = {0};
+char gmCollection[600] = {0};
 char commandCollection[300] = {0};
 char responseCollection[1500] = {0};
 char commandID[50] = {0};
@@ -233,6 +239,7 @@ void setup() {
   // EEPROM SETUP
   EEPROM.begin(1670);
   EEPROM.get(0, refreshTokenTimestamp);
+  Serial.println(refreshTokenTimestamp);
   if (refreshTokenTimestamp > 0) {
     EEPROM.get(10, refreshToken);
   }
@@ -348,6 +355,12 @@ void handleErrors() {
         Serial.println(responseCollection);
         break;
       }
+      case 12: {
+        client.print("Failed gm token update");
+        Serial.println("Failed gm token update");
+        Serial.println(gmCollection);
+        break;
+      }
     }
     client.println(" HTTP/1.1");
     client.println("Host: voip.ms");
@@ -362,12 +375,15 @@ void handleErrors() {
 void queueDiagnosticCommand() {
   if (queuedCommand == 0) {
     if (isEVCharging && currentMillis - diagnosticStamp >= 3600000) {
+      Serial.println("isEVCharging diagnostics request");
       queuedCommand = 6;
     } else if (digitalRead(smsPin) == HIGH && hour() == 2 && (currentMillis - dailyStamp > 3600000 || dailyStamp == 0)) {
+      Serial.println("nightly diagnostics request");
       // 2:00GMT/21:00CDT
       dailyStamp = currentMillis;
       queuedCommand = 6;
     } else if (weekday() == 7 && hour() == 13 && (currentMillis - weeklyStamp > 3600000 || weeklyStamp == 0)) {
+      Serial.println("weekly diagnostics request");
       // Saturday at 13:00GMT/8:00CDT
       weeklyStamp = currentMillis;
       queuedCommand = 6;
@@ -407,21 +423,27 @@ void sampleKeypad() {
 void queueKeypadCommand() {
   if (queuedCommand == 0) {
     if (key1count > 2) {
+      Serial.println("keypad 1");
       queuedCommand = 1;
       resetKeyCount();
     } else if (key2count > 2) {
+      Serial.println("keypad 2");
       queuedCommand = 2;
       resetKeyCount();
     } else if (key3count > 2) {
+      Serial.println("keypad 3");
       queuedCommand = 3;
       resetKeyCount();
     } else if (key4count > 2) {
+      Serial.println("keypad 4");
       queuedCommand = 4;
       resetKeyCount();
     } else if (key5count > 2) {
+      Serial.println("keypad 5");
       queuedCommand = 5;
       resetKeyCount();
     } else if (key6count > 2) {
+      Serial.println("keypad 6");
       queuedCommand = 6;
       resetKeyCount();
     }
@@ -436,16 +458,28 @@ void handleCommand() {
     if (now() - subjectTokenTimestamp >= 3600 - 60) {
       client.connect(refreshServer, port);
       queuedRequest = 8;
+      Serial.println("queuedRequest 8");
     } else if (now() - accessTokenTimestamp >= 1800 - 60) {
       client.connect(apiServer, port);
       queuedRequest = 9;
+      Serial.println("queuedRequest 9");
+    } else if (queuedCommand == 6 && now() - gmTokenTimestamp >= 1800 - 60) {
+      client.connect(queryServer, port);
+      queuedRequest = 12;
+      Serial.println("queuedRequest 12");
+    } else if (queuedCommand == 6) {
+      client.connect(queryServer, port);
+      queuedRequest = queuedCommand;
+      Serial.println("queuedRequest 6");
     } else if (queuedCommand != 7) {
       client.connect(apiServer, port);
       queuedRequest = queuedCommand;
+      Serial.println("queuedRequest !7");
     } else if (queuedCommand == 7 && currentMillis - commandURLStamp > 5000) {
       commandURLStamp = currentMillis;
       client.connect(apiServer, port);
       queuedRequest = 7;
+      Serial.println("queuedRequest 7");
     }
     if (queuedRequest > 0) {
       isTransmitting = true;
@@ -461,6 +495,7 @@ void sendRequest() {
     switch (queuedRequest) {
       // START
       case 1: {
+        Serial.println("sendRequest 1");
         client.print("POST /api/v1/account/vehicles/");
         client.print(vin);
         client.println("/commands/start HTTP/1.1");
@@ -480,6 +515,7 @@ void sendRequest() {
 
       // STOP
       case 2: {
+        Serial.println("sendRequest 2");
         client.print("POST /api/v1/account/vehicles/");
         client.print(vin);
         client.println("/commands/cancelStart HTTP/1.1");
@@ -499,6 +535,7 @@ void sendRequest() {
 
       // LOCK
       case 3: {
+        Serial.println("sendRequest 3");
         client.print("POST /api/v1/account/vehicles/");
         client.print(vin);
         client.println("/commands/lockDoor HTTP/1.1");
@@ -519,6 +556,7 @@ void sendRequest() {
 
       // UNLOCK
       case 4: {
+        Serial.println("sendRequest 4");
         client.print("POST /api/v1/account/vehicles/");
         client.print(vin);
         client.println("/commands/unlockDoor HTTP/1.1");
@@ -539,6 +577,7 @@ void sendRequest() {
 
       // FLASH
       case 5: {
+        Serial.println("sendRequest 5");
         client.print("POST /api/v1/account/vehicles/");
         client.print(vin);
         client.println("/commands/alert HTTP/1.1");
@@ -557,29 +596,33 @@ void sendRequest() {
         break;
       }
 
-      // DIAGNOSTICS
+      // DIAGNOSTICS NEW
       case 6: {
-        client.print("POST /api/v1/account/vehicles/");
+        Serial.println("sendRequest 6");
+        client.print("POST /api/gmone/v1/vehicle/performVehicleChargingMetricsQuery?vehicleVin=");
         client.print(vin);
-        client.println("/commands/diagnostics HTTP/1.1");
         client.println(" HTTP/1.1");
-        client.println("Accept: application/json");
         client.println("Accept-Encoding: br, gzip, deflate");
         client.println("Accept-Language: en-US");
-        client.print("Authorization: Bearer ");
-        client.println(accessToken);
         client.println("Connection: keep-alive");
-        client.println("Content-Type: application/json; charset=UTF-8");
-        client.println("Host: na-mobile-api.gm.com");
-        client.println("User-Agent: myChevrolet/118 CFNetwork/1408.0.4 Darwin/22.5.0");
-        client.println("Content-Length: 117");
+        client.println("Content-Type: application/x-www-form-urlencoded");
+        client.println("Host: eve-vcn.ext.gm.com");
+        client.println("User-Agent: myChevrolet/8006 CFNetwork/3826.600.41 Darwin/24.6.0");
+        client.println("Content-Length: 83");
+        client.print("X-Gm-Token: ");
+        client.println(gmToken);
+        client.print("X-Gm-Mobiletoken: ");
+        client.println(accessToken);
         client.println();
-        client.println("{\"diagnosticsRequest\": { \"diagnosticItem\": [\"EV BATTERY LEVEL\",\"EV PLUG VOLTAGE\",\"EV PLUG STATE\",\"EV CHARGE STATE\"]}}");
+        client.print("vehicleId=");
+        client.print(vid);
+        client.println("&refreshTrigger=useEvVehicleTelemetry");
         break;
       }
 
       // COMMAND RESULT
       case 7: {
+        Serial.println("sendRequest 7");
         client.print("GET /api/v1/account/vehicles/");
         client.print(vin);
         client.print("/requests/");
@@ -600,6 +643,7 @@ void sendRequest() {
 
       // REFRESH/SUBJECT TOKEN
       case 8: {
+        Serial.println("sendRequest 8");
         client.println("POST /gmb2cprod.onmicrosoft.com/b2c_1a_seamless_mobile_signuporsignin/oauth2/v2.0/token HTTP/1.1");
         client.println("Accept: application/json");
         client.print("Client-Request-Id: ");
@@ -621,6 +665,7 @@ void sendRequest() {
 
       // ACCESS TOKEN
       case 9: {
+        Serial.println("sendRequest 9");
         client.println("POST /sec/authz/v3/oauth/token HTTP/1.1");
         client.println("Accept-Language: en-US");
         client.println("Appversion: OMB_CVY_IOS_7.1.0");
@@ -637,8 +682,27 @@ void sendRequest() {
         break;
       }
 
+      // GM TOKEN INIT
+      case 12: {
+        Serial.println("sendRequest 12");
+        client.println("POST /api/gmone/v1/admin/initSession HTTP/1.1");
+        client.println("Accept-Language: en-US");
+        client.print("Content-Length: ");
+        client.println(accessTokenLength + 35);
+        client.println("Content-Type: application/x-www-form-urlencoded");
+        client.println("Host: eve-vcn.ext.gm.com");
+        client.println("User-Agent: myChevrolet/8006 CFNetwork/3826.600.41 Darwin/24.6.0");
+        client.println();
+        client.print("token=");
+        client.print(accessToken);
+        client.print("&vehicleVIN=");
+        client.println(vin);
+        break;
+      }
+
       // SMS
       case 10: {
+        Serial.println("sendRequest 10");
         client.print("GET /api/v1/rest.php?api_username=");
         client.print(smsUser);
         client.print("&api_password=");
@@ -655,6 +719,7 @@ void sendRequest() {
 
       // TIME
       case 11: {
+        Serial.println("sendRequest 11");
         client.println("GET / HTTP/1.1");
         client.print("Host: ");
         client.println(smsServer);
@@ -673,9 +738,10 @@ void fetchResponse() {
   if ((client.available() > 50) && queuedFetch > 0) {
     collectIndex = 0;
     collect = false;
-    switch ((queuedFetch <= 6) ? 1 : queuedFetch) {
+    switch ((queuedFetch <= 5) ? 1 : queuedFetch) {
       // COMMAND ID
       case 1: {
+        Serial.println("fetchResponse 1");
         while (client.available()) {
           char c = client.read();
           if (c == 123) {
@@ -702,7 +768,9 @@ void fetchResponse() {
       }
 
       // COMMAND RESULT
+      case 6:
       case 7: {
+        Serial.println("fetchResponse 6/7");
         while (client.available()) {
           char c = client.read();
           if (c == 123) {
@@ -717,7 +785,8 @@ void fetchResponse() {
         if (strstr(responseCollection, "success")) {
           queuedCommand = 0;
           digitalWrite(tapeMotorPin, LOW);
-          if (strstr(responseCollection, "diagnostics")) {
+          if (strstr(responseCollection, "results")) {
+            Serial.println("fetchResponse diagnostics request!");
             diagnosticStamp = currentMillis;
             isResetRequired = true;
             updateDiagnostics();
@@ -732,6 +801,7 @@ void fetchResponse() {
 
       // REFRESH/SUBJECT TOKEN
       case 8: {
+        Serial.println("fetchResponse 8");
         delay(100);
         while (client.available()) {
           char c = client.read();
@@ -778,6 +848,7 @@ void fetchResponse() {
 
       // ACCESS TOKEN
       case 9: {
+        Serial.println("fetchResponse 9");
         while (client.available()) {
           char c = client.read();
           if (c == 123) {
@@ -792,6 +863,7 @@ void fetchResponse() {
         if (strstr(accessCollection, "access_token") != NULL) {
           char *accessTokenStart = strstr(accessCollection, "access_token") + 15;
           char *accessTokenEnd = strstr(accessTokenStart, "\"");
+          accessTokenLength = accessTokenEnd - accessTokenStart;
           strncpy(accessToken, accessTokenStart, accessTokenEnd - accessTokenStart);
           accessToken[accessTokenEnd - accessTokenStart] = '\0';
           accessTokenTimestamp = now();
@@ -802,14 +874,44 @@ void fetchResponse() {
         break;
       }
 
+      // GM TOKEN
+      case 12: {
+        Serial.println("fetchResponse 12");
+        while (client.available()) {
+          char c = client.read();
+          if (c == 123) {
+            collect = true;
+          }
+          if (collect) {
+            gmCollection[collectIndex++] = c;
+          }
+        }
+        gmCollection[collectIndex] = '\0';
+        Serial.println();
+
+        if (strstr(gmCollection, "token") != NULL) {
+          char *gmTokenStart = strstr(gmCollection, "token") + 8;
+          char *gmTokenEnd = strstr(gmTokenStart, "\"");
+          strncpy(gmToken, gmTokenStart, gmTokenEnd - gmTokenStart);
+          gmToken[gmTokenEnd - gmTokenStart] = '\0';
+          gmTokenTimestamp = now();
+        } else {
+          failState = 12;
+        }
+        client.flush();
+        break;
+      }
+
       // SMS
       case 10: {
+        Serial.println("fetchResponse 10");
         client.flush();
         break;
       }
 
       // TIME
       case 11: {
+        Serial.println("fetchResponse 11");
         while (client.available() && collectIndex < 59) {
           timeCollection[collectIndex++] = client.read();
         }
@@ -821,7 +923,7 @@ void fetchResponse() {
     queuedFetch = 0;
     isTransmitting = false;
     client.stop();
-  } else if (queuedFetch > 0 && currentMillis > sendStamp && currentMillis - sendStamp >= 5000) {
+  } else if (queuedFetch > 0 && currentMillis > sendStamp && currentMillis - sendStamp >= 30000) {
     failState = 2;
     isTransmitting = false;
     client.stop();
@@ -1144,32 +1246,32 @@ void blinkSOS() {
 }
 
 void updateDiagnostics() {
-  char *batteryLevelTag = strstr(responseCollection, "EV BATTERY LEVEL");
-  char *batteryLevelValue = strstr(batteryLevelTag, "value") + 8;
-  if (batteryLevelValue[3] == 46) {
-    evBatteryLevel = 100;
-  } else if (batteryLevelValue[2] == 46) {
-    evBatteryLevel = (batteryLevelValue[0] - '0') * 10 + (batteryLevelValue[1] - '0');
-  } else if (batteryLevelValue[1] == 46) {
+  char *batteryLevelTag = strstr(responseCollection, "soc");
+  char *batteryLevelValue = batteryLevelTag + 5;
+  if (batteryLevelValue[1] == 44 || batteryLevelValue[1] == 46) {
     evBatteryLevel = (batteryLevelValue[0] - '0');
+  } else if (batteryLevelValue[2] == 44 || batteryLevelValue[2] == 46) {
+    evBatteryLevel = (batteryLevelValue[0] - '0') * 10 + (batteryLevelValue[1] - '0');
+  } else if (batteryLevelValue[3] == 44 || batteryLevelValue[3] == 46) {
+    evBatteryLevel = 100;
   } else {
     failState = 8;
   }
   stepperTarget = stepsTo100 * evBatteryLevel / 100;
 
-  char *plugVoltageTag = strstr(responseCollection, "EV PLUG VOLTAGE");
-  char *plugVoltageValue = strstr(plugVoltageTag, "value") + 8;
+  char *plugVoltageTag = strstr(responseCollection, "cpwr");
+  char *plugVoltageValue = plugVoltageTag + 6;
   if (isDigit(plugVoltageValue[2])) {
     evPlugVoltage = (plugVoltageValue[0] - '0') * 100 + (plugVoltageValue[1] - '0') * 10 + (plugVoltageValue[2] - '0');
-  } else if (isDigit(plugVoltageValue[0])) {
+  } else if (plugVoltageValue[0] == 110) {
     evPlugVoltage = 0;
   } else {
     failState = 9;
   }
   setVoltage = true;
 
-  char *plugStateTag = strstr(responseCollection, "EV PLUG STATE");
-  char *plugStateValue = strstr(plugStateTag, "value") + 8;
+  char *plugStateTag = strstr(responseCollection, "cplug");
+  char *plugStateValue = plugStateTag + 8;
   if (plugStateValue[0] == 112) {
     isEVPlugged = true;
   } else if (plugStateValue[0] == 117) {
@@ -1178,8 +1280,8 @@ void updateDiagnostics() {
     failState = 10;
   }
 
-  char *chargeStateTag = strstr(responseCollection, "EV CHARGE STATE");
-  char *chargeStateValue = strstr(chargeStateTag, "value") + 8;
+  char *chargeStateTag = strstr(responseCollection, "cstate");
+  char *chargeStateValue = chargeStateTag + 9;
   if (chargeStateValue[0] == 99) {
     isEVCharging = true;
   } else if (chargeStateValue[0] == 68) {
