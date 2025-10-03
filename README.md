@@ -53,13 +53,14 @@ Special thanks to samrum for their work on the [OnStarJS](https://github.com/sam
 #define SECRET_SMS_DID "1234567890" // VoIP.ms DID number
 #define SECRET_SMS_DST "9876543210" // Phone number to receive SMS notifications
 #define SECRET_VIN "ccc" // Vehicle Identification Number (VIN) of your vehicle
+#define SECRET_VID "hhh" // Vehicle Id from GM
 #define SECRET_DEVICE_ID "dddddddd-dddd-dddd-dddd-dddddddddddd" // Random Version 4 UUID from https://www.uuidgenerator.net/version4
 #define SECRET_CLIENT_REQUEST_ID "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee" // Found in header of https request to custlogin.gm.com
 #define SECRET_CLIENT_ID "ffffffff-ffff-ffff-ffff-ffffffffffff" // Found in body of https request to custlogin.gm.com
 #define SECRET_REFRESH_TOKEN "ggg\0" // ~1650 character token found in https response from custlogin.gm.com
 ```
 
-The last three secrets can be found by monitoring network traffic between the official Chevrolet app and custlogin.gm.com using a tool such as [Burp Suite](https://portswigger.net/). The critical request to custlogin.gm.com appears to occur only once an hour when the `subject_token` expires.![Screenshot of Burp Suite interface](/images/BurpSuite-OnStar.jpg)
+The last three secrets can be found by monitoring network traffic between the official Chevrolet app and custlogin.gm.com using a tool such as [Burp Suite](https://portswigger.net/). The critical request to custlogin.gm.com appears to occur only once an hour when the `subject_token` expires.![Screenshot of Burp Suite interface](/images/BurpSuite-OnStar.jpg). Similarly, you can obtain your vehicle ID by monitoring traffic to eve-vcn.ext.gm.com.
 
 <br>
 
