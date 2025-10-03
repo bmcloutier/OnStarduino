@@ -60,7 +60,7 @@ Special thanks to samrum for their work on the [OnStarJS](https://github.com/sam
 #define SECRET_REFRESH_TOKEN "ggg\0" // ~1650 character token found in https response from custlogin.gm.com
 ```
 
-The last three secrets can be found by monitoring network traffic between the official Chevrolet app and custlogin.gm.com using a tool such as [Burp Suite](https://portswigger.net/). The critical request to custlogin.gm.com appears to occur only once an hour when the `subject_token` expires.![Screenshot of Burp Suite interface](/images/BurpSuite-OnStar.jpg). Similarly, you can obtain your vehicle ID by monitoring traffic to eve-vcn.ext.gm.com.
+The last three secrets can be found by monitoring network traffic between the official Chevrolet app and custlogin.gm.com using a tool such as [Burp Suite](https://portswigger.net/). The critical request to custlogin.gm.com appears to occur only once an hour when the `subject_token` expires. Similarly, you can obtain your vehicle ID by monitoring traffic to eve-vcn.ext.gm.com.![Screenshot of Burp Suite interface](/images/BurpSuite-OnStar.jpg)
 
 <br>
 
